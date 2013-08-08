@@ -39,7 +39,7 @@ else
     --os-region-name=$REGION \
     --os-service-type=object-store \
     --os-endpoint-type=internalURL \
-    upload -c $CONTAINER *.gz
+    upload -S 5368709120 -c $CONTAINER *.gz
     logger -t swiftrotate -p daemon.info "DONE uploading to Swift."
     rm $PIDFILE
 fi
