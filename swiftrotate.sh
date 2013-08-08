@@ -19,8 +19,8 @@ REGION=$(grep ^REGION $DIR/.swiftrotate | awk -F" = " '{print $2}')
 AUTH_URL=$(grep ^AUTH_URL $DIR/.swiftrotate | awk -F" = " '{print $2}')
 TENANT_ID=$(grep ^TENANT_ID $DIR/.swiftrotate | awk -F" = " '{print $2}')
 STORAGE_URL=$(grep ^STORAGE_URL $DIR/.swiftrotate | awk -F" = " '{print $2}')
-CONTAINER=syslog
-BACKUPDIR=/logs/
+CONTAINER=$(grep ^CONTAINER $DIR/.swiftrotate | awk -F" = " '{print $2}')
+BACKUPDIR=$(grep ^BACKUPDIR $DIR/.swiftrotate | awk -F" = " '{print $2}')
 
 if [ -f $PIDFILE ]
 then
