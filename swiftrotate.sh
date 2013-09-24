@@ -24,6 +24,8 @@ STORAGE_URL=https://snet-storage101.$DATACENTER.clouddrive.com/v1/$TENANT_ID
 CONTAINER=syslog
 BACKUPDIR=/logs/
 
+mkdir -p $BACKUPDIR
+
 if [ -f $PIDFILE ]
 then
     logger -t swiftrotate -p daemon.info "ERROR: Another swiftrotate process is already running"
