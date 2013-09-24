@@ -15,10 +15,12 @@ SCRIPT=$0
 DIR=$(dirname $SCRIPT)
 USERNAME=$(grep ^USERNAME $DIR/.swiftrotate | awk -F" = " '{print $2}')
 PASSWORD=$(grep ^PASSWORD $DIR/.swiftrotate | awk -F" = " '{print $2}')
+DATACENTER=$(grep ^DATACENTER $DIR/.swiftrotate | awk -F" = " '{print $2}')
 REGION=$(grep ^REGION $DIR/.swiftrotate | awk -F" = " '{print $2}')
+OS_TENANT_ID=$(grep ^OS_TENANT_ID $DIR/.swiftrotate | awk -F " = " '{print $2}')
 AUTH_URL=$(grep ^AUTH_URL $DIR/.swiftrotate | awk -F" = " '{print $2}')
-TENANT_ID=$(grep ^TENANT_ID $DIR/.swiftrotate | awk -F" = " '{print $2}')
-STORAGE_URL=$(grep ^STORAGE_URL $DIR/.swiftrotate | awk -F" = " '{print $2}')
+TENANT_ID=`curl -s -X POST $AUTH_URL -d "{\"auth\":{\"passwordCredentials\":{\"username\":\"$USERNAME\",\"password\":\"$PASSWORD\" }},\"tenantId\": \"$OS_TENANT_ID\"}" -H "Content-type: application/json" | python -m json.tool | grep tenantId | grep Mosso  | cut -d ":" -f2 | sort | uniq | sed -e s/\"//g  | sed -e "s/ //g"`
+STORAGE_URL=https://snet-storage101.$DATACENTER.clouddrive.com/v1/$TENANT_ID
 CONTAINER=syslog
 BACKUPDIR=/logs/
 
