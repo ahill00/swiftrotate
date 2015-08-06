@@ -16,23 +16,10 @@ DIR=$(dirname $SCRIPT)
 USERNAME=$(grep ^USERNAME $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
 PASSWORD=$(grep ^PASSWORD $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
 APIKEY=$(grep ^APIKEY $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
-DATACENTER=$(grep ^DATACENTER $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
 REGION=$(grep ^REGION $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
-OS_TENANT_ID=$(grep ^OS_TENANT_ID $DIR/.swiftrotate | awk -F "=" '{print $2}'|tr -d " ")
 AUTH_URL=$(grep ^AUTH_URL $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
 BACKUPDIR=$(grep ^BACKUPDIR $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
-
-# Token is the auth_url plus /tokens
-if [ $(echo "$AUTH_URL" | awk '{print substr($0,length,1)}') == '/' ]; 
-then
- TOKEN_URL="${AUTH_URL}tokens";
-else
- TOKEN_URL="${AUTH_URL}/tokens";
-fi;
-
-TENANT_ID=`curl -s -X POST -d "{\"auth\":{\"RAX-KSKEY:apiKeyCredentials\":{\"username\": \"$USERNAME\",\"apiKey\": \"$APIKEY\"}}}" -H 'Content-Type: application/json' $TOKEN_URL|python -mjson.tool|egrep 'tenantId.*Mosso'|head -n 1|perl -pe 's/.*tenantId\".*\"(.*)\"/$1/g'`;
-STORAGE_URL=https://snet-storage101.$DATACENTER.clouddrive.com/v1/$TENANT_ID
-CONTAINER=syslog
+CONTAINER=$(grep ^CONTAINER $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
 
 if [ -f $PIDFILE ]
 then
@@ -42,15 +29,13 @@ else
     logger -t swiftrotate -p daemon.info "Uploading to Swift..."
     cd $BACKUPDIR
     /usr/local/bin/swift \
-    --auth-version=2.0 \
-    -v -s \
-    --os-auth-url=$AUTH_URL \
-    --os-username=$USERNAME \
-    --os-password=$PASSWORD \
-    --os-tenant-id=$TENANT_ID \
+    -v \
+    --debug \
+    -s --os-endpoint-type=internalURL \
+    --auth-version=2.0 --os-auth-url=$AUTH_URL \
     --os-region-name=$REGION \
-    --os-service-type=object-store \
-    --os-endpoint-type=internalURL \
+    -U $USERNAME \
+    -K $PASSWORD \
     upload -S 5368709120 -c $CONTAINER *.gz 2>/dev/null
     logger -t swiftrotate -p daemon.info "DONE uploading to Swift."
     rm $PIDFILE
