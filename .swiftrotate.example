@@ -4,5 +4,5 @@ PASSWORD = <password> # Password, not API key
 REGION = <region>
 ENDPOINT_TYPE = internalURL
 AUTH_URL = <authurl> #  https://identity.api.rackspacecloud.com/v2.0/
-TENANT_ID = <tenant_id> # Returned from Service Catalog. e.g., MossoCloudFS_aaaaaaaa-bbbb-cccc-dddd-eeeeeeee
-STORAGE_URL = <storage_url> # e.g., https://snet-storage101.ord1.clouddrive.com/v1/MossoCloudFS_aaaaaaaa-bbbb-cccc-dddd-eeeeeeee
+CONTAINER = example # swift container to store files in
+BACKUPDIR = /logs/ # directory logs are stored in to upload to swift
