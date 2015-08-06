@@ -13,16 +13,26 @@ PIDFILE="/tmp/swiftrotate.pid"
 MYPID=$$
 SCRIPT=$0
 DIR=$(dirname $SCRIPT)
-USERNAME=$(grep ^USERNAME $DIR/.swiftrotate | awk -F" = " '{print $2}')
-PASSWORD=$(grep ^PASSWORD $DIR/.swiftrotate | awk -F" = " '{print $2}')
-DATACENTER=$(grep ^DATACENTER $DIR/.swiftrotate | awk -F" = " '{print $2}')
-REGION=$(grep ^REGION $DIR/.swiftrotate | awk -F" = " '{print $2}')
-OS_TENANT_ID=$(grep ^OS_TENANT_ID $DIR/.swiftrotate | awk -F " = " '{print $2}')
-AUTH_URL=$(grep ^AUTH_URL $DIR/.swiftrotate | awk -F" = " '{print $2}')
-TENANT_ID=`curl -s -X POST $AUTH_URL -d "{\"auth\":{\"passwordCredentials\":{\"username\":\"$USERNAME\",\"password\":\"$PASSWORD\" }},\"tenantId\": \"$OS_TENANT_ID\"}" -H "Content-type: application/json" | python -m json.tool | grep tenantId | grep Mosso  | cut -d ":" -f2 | sort | uniq | sed -e s/\"//g  | sed -e "s/ //g"`
+USERNAME=$(grep ^USERNAME $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
+PASSWORD=$(grep ^PASSWORD $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
+APIKEY=$(grep ^APIKEY $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
+DATACENTER=$(grep ^DATACENTER $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
+REGION=$(grep ^REGION $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
+OS_TENANT_ID=$(grep ^OS_TENANT_ID $DIR/.swiftrotate | awk -F "=" '{print $2}'|tr -d " ")
+AUTH_URL=$(grep ^AUTH_URL $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
+BACKUPDIR=$(grep ^BACKUPDIR $DIR/.swiftrotate | awk -F"=" '{print $2}'|tr -d " ")
+
+# Token is the auth_url plus /tokens
+if [ $(echo "$AUTH_URL" | awk '{print substr($0,length,1)}') == '/' ]; 
+then
+ TOKEN_URL="${AUTH_URL}tokens";
+else
+ TOKEN_URL="${AUTH_URL}/tokens";
+fi;
+
+TENANT_ID=`curl -s -X POST -d "{\"auth\":{\"RAX-KSKEY:apiKeyCredentials\":{\"username\": \"$USERNAME\",\"apiKey\": \"$APIKEY\"}}}" -H 'Content-Type: application/json' $TOKEN_URL|python -mjson.tool|egrep 'tenantId.*Mosso'|head -n 1|perl -pe 's/.*tenantId\".*\"(.*)\"/$1/g'`;
 STORAGE_URL=https://snet-storage101.$DATACENTER.clouddrive.com/v1/$TENANT_ID
 CONTAINER=syslog
-BACKUPDIR=/logs/
 
 if [ -f $PIDFILE ]
 then
@@ -41,7 +51,7 @@ else
     --os-region-name=$REGION \
     --os-service-type=object-store \
     --os-endpoint-type=internalURL \
-    upload -S 5368709120 -c $CONTAINER *.gz
+    upload -S 5368709120 -c $CONTAINER *.gz 2>/dev/null
     logger -t swiftrotate -p daemon.info "DONE uploading to Swift."
     rm $PIDFILE
 fi
